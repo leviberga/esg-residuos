@@ -1,0 +1,24 @@
+spring:
+  # Bloco de configuração do Data Source
+  datasource:
+    # Conecta ao banco no Docker (localhost)
+    # /XEPDB1 é o Service Name padrão da imagem gvenzl
+    url: jdbc:oracle:thin:@localhost:1521/XEPDB1
+
+    # Credenciais definidas no docker-compose.yml
+    username: esg_user
+    password: esg_pass
+
+    # Driver do Oracle
+    driver-class-name: oracle.jdbc.driver.OracleDriver
+
+  # Configuração do Flyway para o profile 'dev'
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    # O usuário que executa a migração
+    user: esg_user
+    password: esg_pass
+    # O Flyway vai gerenciar as tabelas no schema do próprio usuário
+    schemas: ESG_USER
+    table: flyway_schema_history

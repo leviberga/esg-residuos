@@ -1,0 +1,32 @@
+spring:
+  # Bloco de configuração do Data Source
+  datasource:
+    # Conecta ao banco da FIAP (usando SID "ORCL" da imagem)
+    url: jdbc:oracle:thin:@oracle.fiap.com.br:1521:ORCL
+
+    # credenciais da FIAP
+    username: RM560489
+    password: 080205
+
+    # Driver do Oracle
+    driver-class-name: oracle.jdbc.driver.OracleDriver
+
+  hikari:
+    # Define o tamanho máximo do pool como 1
+    maximum-pool-size: 1
+    # Define o mínimo de conexões ociosas como 1
+    minimum-idle: 1
+
+  # Configuração do Flyway para o profile 'prod'
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    # O usuário que executa a migração
+    user: RM560489
+    password: 080205
+    # O Flyway vai gerenciar as tabelas no seu schema RM560489
+    schemas: RM560489
+    table: flyway_schema_history
+
+    baseline-on-migrate: true
+    baseline-version: 0

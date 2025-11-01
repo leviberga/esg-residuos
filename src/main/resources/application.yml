@@ -1,0 +1,25 @@
+server:
+  port: 8080
+
+spring:
+  # 1. ATIVA O PERFIL 'dev' (DOCKER) POR PADRÃO
+  # Para mudar para o banco da FIAP, troque para 'prod'
+  profiles:
+    active: prod
+
+# Configuração do JPA (comum a todos os perfis)
+jpa:
+  # Dialeto do Oracle
+  database-platform: org.hibernate.dialect.OracleDialect
+  hibernate:
+    # O Flyway cuida disso, então desabilitamos
+    ddl-auto: none
+
+  # Mostra o SQL no console
+  properties:
+    hibernate:
+      jdbc:
+        lob:
+          non_contextual_creation: true
+      format_sql: true
+  show-sql: true

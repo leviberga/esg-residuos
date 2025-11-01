@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  # Serviço do Banco de Dados Oracle XE (para o ambiente 'dev')
+  oracle-db:
+    image: gvenzl/oracle-xe:21-slim-faststart
+    container_name: oracle-db-esg
+    ports:
+      # Mapeia a porta 1521 do container para a porta 1521 da sua máquina
+      - "1521:1521"
+    environment:
+      # Define uma senha para o usuário SYSTEM (admin)
+      - ORACLE_PASSWORD=admin_pass
+      # Cria automaticamente um usuário para a nossa aplicação
+      - APP_USER=esg_user
+      - APP_PASSWORD=esg_pass
+    volumes:
+      - oracle_data:/opt/oracle/oradata
+
+volumes:
+  oracle_data:
+    name: oracle_esg_data
