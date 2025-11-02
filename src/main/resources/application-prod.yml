@@ -24,7 +24,7 @@ spring:
     # O usuário que executa a migração
     user: RM560489
     password: 080205
-    # O Flyway vai gerenciar as tabelas no seu schema RM560489
+    # O Flyway vai gerenciar as tabelas no schema RM560489
     schemas: RM560489
     table: flyway_schema_history
 

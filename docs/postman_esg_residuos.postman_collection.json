@@ -1,0 +1,83 @@
+{
+  "info": {
+    "_postman_id": "esg-residuos-collection",
+    "name": "ESG Resíduos - Collection",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create Ponto Coleta",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nome\": \"Ponto Postman\",\n  \"endereco\": \"Rua X, 1\",\n  \"cidade\": \"São Paulo\",\n  \"tipo\": \"Papel\",\n  \"volumeMaximo\": 100.0\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/api/ponto-coleta", "host": ["{{baseUrl}}"], "path": ["api","ponto-coleta"] }
+      },
+      "auth": { "type": "basic", "basic": [ { "key": "username", "value": "{{adminUser}}" }, { "key": "password", "value": "{{adminPass}}" } ] }
+    },
+    {
+      "name": "List Pontos",
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{baseUrl}}/api/pontos-coleta?cidade=São%20Paulo", "host": ["{{baseUrl}}"], "path": ["api","pontos-coleta"], "query": [ { "key": "cidade", "value": "São Paulo" } ] }
+      },
+      "auth": { "type": "basic", "basic": [ { "key": "username", "value": "{{userUser}}" }, { "key": "password", "value": "{{userPass}}" } ] }
+    },
+    {
+      "name": "Get Ponto by Id",
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{baseUrl}}/api/ponto-coleta/1", "host": ["{{baseUrl}}"], "path": ["api","ponto-coleta","1"] }
+      },
+      "auth": { "type": "basic", "basic": [ { "key": "username", "value": "{{userUser}}" }, { "key": "password", "value": "{{userPass}}" } ] }
+    },
+    {
+      "name": "Create Registro Coleta",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"pontoColetaId\": 1,\n  \"volumeColetado\": 10.5\n}" },
+        "url": { "raw": "{{baseUrl}}/api/registro-coleta", "host": ["{{baseUrl}}"], "path": ["api","registro-coleta"] }
+      },
+      "auth": { "type": "basic", "basic": [ { "key": "username", "value": "{{adminUser}}" }, { "key": "password", "value": "{{adminPass}}" } ] }
+    },
+    {
+      "name": "Update Ponto",
+      "request": {
+        "method": "PUT",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"nome\": \"Ponto Atualizado\",\n  \"endereco\": \"Rua Atualizada, 2\",\n  \"cidade\": \"São Paulo\",\n  \"tipo\": \"Papel\",\n  \"volumeMaximo\": 200.0\n}" },
+        "url": { "raw": "{{baseUrl}}/api/ponto-coleta/1", "host": ["{{baseUrl}}"], "path": ["api","ponto-coleta","1"] }
+      },
+      "auth": { "type": "basic", "basic": [ { "key": "username", "value": "{{adminUser}}" }, { "key": "password", "value": "{{adminPass}}" } ] }
+    },
+    {
+      "name": "Delete Ponto",
+      "request": {
+        "method": "DELETE",
+        "url": { "raw": "{{baseUrl}}/api/ponto-coleta/1", "host": ["{{baseUrl}}"], "path": ["api","ponto-coleta","1"] }
+      },
+      "auth": { "type": "basic", "basic": [ { "key": "username", "value": "{{adminUser}}" }, { "key": "password", "value": "{{adminPass}}" } ] }
+    },
+    {
+      "name": "List Alerts",
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{baseUrl}}/api/coletas/alertas", "host": ["{{baseUrl}}"], "path": ["api","coletas","alertas"] }
+      },
+      "auth": { "type": "basic", "basic": [ { "key": "username", "value": "{{userUser}}" }, { "key": "password", "value": "{{userPass}}" } ] }
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "adminUser", "value": "admin" },
+    { "key": "adminPass", "value": "admin" },
+    { "key": "userUser", "value": "user" },
+    { "key": "userPass", "value": "user" }
+  ]
+}

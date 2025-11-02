@@ -6,8 +6,6 @@ import br.com.fiap.esg_residuos.model.dto.PontoColetaExibicaoDTO;
 import br.com.fiap.esg_residuos.repository.PontoColetaRepository;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,17 +31,28 @@ public class PontoColetaService {
     @Transactional(readOnly = true)
     public List<PontoColetaExibicaoDTO> listar(String cidade, String tipo) {
 
-        // Lógica de filtro dinâmico
-        Specification<PontoColeta> spec = Specification.where(null);
-        if (cidade != null && !cidade.isEmpty()) {
-            spec = spec.and((root, query, cb) -> cb.equal(root.get("cidade"), cidade));
-        }
-        if (tipo != null && !tipo.isEmpty()) {
-            spec = spec.and((root, query, cb) -> cb.equal(root.get("tipo"), tipo));
+        // Implementação simples e segura usando métodos do repositório
+        // Evitamos o uso incorreto de Specification/Sort e utilizamos os métodos já disponíveis.
+        if ((cidade == null || cidade.isEmpty()) && (tipo == null || tipo.isEmpty())) {
+            return pontoColetaRepository.findAll().stream()
+                    .map(PontoColetaExibicaoDTO::new)
+                    .toList();
         }
 
-        return pontoColetaRepository.findAll((Sort) spec)
-                .stream()
+        if (cidade != null && !cidade.isEmpty() && (tipo == null || tipo.isEmpty())) {
+            return pontoColetaRepository.findByCidade(cidade).stream()
+                    .map(PontoColetaExibicaoDTO::new)
+                    .toList();
+        }
+
+        if ((cidade == null || cidade.isEmpty()) && tipo != null && !tipo.isEmpty()) {
+            return pontoColetaRepository.findByTipo(tipo).stream()
+                    .map(PontoColetaExibicaoDTO::new)
+                    .toList();
+        }
+
+        // Ambos os filtros presentes
+        return pontoColetaRepository.findByCidadeAndTipo(cidade, tipo).stream()
                 .map(PontoColetaExibicaoDTO::new)
                 .toList();
     }
@@ -52,7 +61,6 @@ public class PontoColetaService {
     public PontoColetaExibicaoDTO buscarPorId(Long id) {
         Optional<PontoColeta> pontoOpt = pontoColetaRepository.findById(id);
         if (pontoOpt.isEmpty()) {
-            // Em um projeto real, lançaríamos uma exceção customizada (ex: PontoNaoEncontradoException)
             throw new RuntimeException("Ponto de coleta não encontrado com ID: " + id);
         }
         return new PontoColetaExibicaoDTO(pontoOpt.get());

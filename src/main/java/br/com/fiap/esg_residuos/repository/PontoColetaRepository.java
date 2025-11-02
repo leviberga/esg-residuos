@@ -10,7 +10,6 @@ import java.util.List;
 @Repository
 public interface PontoColetaRepository extends JpaRepository<PontoColeta, Long> {
 
-    // Métodos de filtro que serão usados nos endpoints (Dia 2)
     List<PontoColeta> findByCidade(String cidade);
 
     List<PontoColeta> findByTipo(String tipo);
