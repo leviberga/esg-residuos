@@ -1,0 +1,40 @@
+name: PR Check — Lint & Testes
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  pr-check:
+    name: 🔍 Verificação de PR
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: ☕ Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: 🧪 Rodar testes com H2 (in-memory)
+        run: mvn test -B -Dspring.profiles.active=test
+
+      - name: 📊 Relatório de cobertura (JaCoCo)
+        run: mvn jacoco:report -B || true
+
+      - name: 📤 Upload cobertura
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: target/site/jacoco/
+          retention-days: 7
+
+      - name: 🔍 Validar Dockerfile
+        run: docker build --no-cache --target builder -t esg-check . || true

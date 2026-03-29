@@ -1,22 +1,55 @@
-version: '3.8'
-
 services:
-  # Serviço do Banco de Dados Oracle XE (para o ambiente 'dev')
+  app:
+    build: .
+    env_file:
+      - .env  # ← Carrega as variáveis do .env
+
+  # Serviço do Banco de Dados Oracle XE
   oracle-db:
     image: gvenzl/oracle-xe:21-slim-faststart
     container_name: oracle-db-esg
-    ports:
-      # Mapeia a porta 1521 do container para a porta 1521 da sua máquina
-      - "1521:1521"
     environment:
-      # Define uma senha para o usuário SYSTEM (admin)
-      - ORACLE_PASSWORD=admin_pass
-      # Cria automaticamente um usuário para a nossa aplicação
-      - APP_USER=esg_user
-      - APP_PASSWORD=esg_pass
+      - ORACLE_PASSWORD=${ORACLE_PASSWORD}
+      - APP_USER=${APP_USER}
+      - APP_USER_PASSWORD=${APP_USER_PASSWORD}
+    ports:
+      - "1521:1521"
     volumes:
       - oracle_data:/opt/oracle/oradata
+    networks:
+      - esg-network
+    healthcheck:
+      test: ["CMD", "sqlplus", "-S", "system/080205@localhost:1521/XE", "<<<", "SELECT 1 FROM DUAL;"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # Serviço da Aplicação Spring Boot
+  esg-app:
+    build: .
+    container_name: esg-app-container
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:oracle:thin:@oracle-db:1521/XE
+      - SPRING_DATASOURCE_USERNAME=${APP_USER}
+      - SPRING_DATASOURCE_PASSWORD=${APP_USER_PASSWORD}
+    ports:
+      - "8080:8080"
+    networks:
+      - esg-network
+    depends_on:
+      oracle-db:
+        condition: service_healthy # Espera o healthcheck.sh do Oracle dar OK
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+networks:
+  esg-network:
+    driver: bridge
 
 volumes:
   oracle_data:
-    name: oracle_esg_data
