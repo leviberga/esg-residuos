@@ -1,6 +1,6 @@
 # ESG Resíduos — Projeto
 
-Este projeto é uma API RESTful para gestão de pontos de coleta e registros de coleta (tema: Gestão de Resíduos e Reciclagem) desenvolvida com Java 17 e Spring Boot.
+Este projeto é uma API RESTful para gestão de pontos de coleta e registros de coleta com tema de Gestão de Resíduos e Reciclagem, desenvolvida com Java 17 e Spring Boot.
 
 Conteúdo deste repositório:
 - `src/main` — código-fonte
