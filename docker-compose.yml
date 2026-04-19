@@ -1,37 +1,9 @@
-version: '3.8'
-
 services:
-  oracle-db:
-    image: gvenzl/oracle-xe:21-slim-faststart
-    container_name: oracle-db-esg
-    environment:
-      - ORACLE_PASSWORD=admin_pass
-      - APP_USER=esg_user
-      - APP_USER_PASSWORD=esg_pass # Nome obrigatório exigido pela imagem
-    ports:
-      - "1521:1521"
-    volumes:
-      - oracle_data:/opt/oracle/oradata
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-
   esg-app:
     build: .
     container_name: esg-app-container
     ports:
       - "8080:8080"
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:oracle:thin:@oracle-db:1521/XE
-      - SPRING_DATASOURCE_USERNAME=esg_user
-      - SPRING_DATASOURCE_PASSWORD=esg_pass
-    depends_on:
-      oracle-db:
-        condition: service_healthy
-    restart: always
-
-volumes:
-  oracle_data:
-    name: oracle_esg_data
+    env_file:
+      - .env
+    restart: on-failure
