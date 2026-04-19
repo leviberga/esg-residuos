@@ -59,6 +59,7 @@ Executar os testes (unit + integração H2):
 ```powershell
 mvn test
 ```
+Teste 
 
 Observações / Entrega
 - A solução usa Oracle em produção/dev (configurado via profiles). As migrações Flyway estão em `src/main/resources/db/migration` (V1 cria tabelas e sequências, V2 cria índices, V3 insere dados de exemplo).
