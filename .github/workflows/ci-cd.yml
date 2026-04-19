@@ -9,7 +9,6 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
-  JAVA_VERSION: '17'
 
 jobs:
   build-and-test:
@@ -21,32 +20,30 @@ jobs:
         env:
           ORACLE_PASSWORD: admin_pass
           APP_USER: esg_user
-          APP_PASSWORD: esg_pass
+          APP_USER_PASSWORD: esg_pass
         ports:
           - 1521:1521
         options: >-
           --health-cmd "healthcheck.sh"
-          --health-interval 15s
+          --health-interval 20s
           --health-timeout 10s
           --health-retries 10
 
     steps:
       - uses: actions/checkout@v4
-      - name: ☕ Configurar JDK
+      - name: ☕ Setup Java
         uses: actions/setup-java@v4
         with:
-          java-version: ${{ env.JAVA_VERSION }}
+          java-version: '17'
           distribution: 'temurin'
           cache: maven
-
-      - name: 🧪 Executar testes unitários
+      - name: 🧪 Testes Unitários
         run: mvn test -B
         env:
           DB_URL: jdbc:oracle:thin:@localhost:1521/XE
           DB_USER: esg_user
           DB_PASSWORD: esg_pass
-
-      - name: 🏗️ Build do JAR
+      - name: 🏗️ Package JAR
         run: mvn package -DskipTests -B
 
   docker-build:
@@ -69,42 +66,18 @@ jobs:
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
 
-  deploy-staging:
-    name: 🚀 Deploy Staging
+  deploy:
+    name: 🚀 Deploy
     needs: docker-build
-    if: github.ref == 'refs/heads/develop'
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        environment: [staging, production]
     environment:
-      name: staging
-      url: http://${{ vars.STAGING_HOST }}:8080 # FIX: Usando vars
-    steps:
-      - name: 🚀 Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ vars.STAGING_HOST }}
-          username: ${{ secrets.STAGING_USER }}
-          key: ${{ secrets.STAGING_SSH_KEY }}
-          script: |
-            cd /opt/esg-residuos
-            docker compose pull
-            docker compose up -d
-
-  deploy-production:
-    name: 🏁 Deploy Produção
-    needs: docker-build
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    environment:
-      name: production
-      url: http://${{ vars.PROD_HOST }}:8080 # FIX: Usando vars
-    steps:
-      - name: 🏁 Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ vars.PROD_HOST }}
-          username: ${{ secrets.PROD_USER }}
-          key: ${{ secrets.PROD_SSH_KEY }}
-          script: |
-            cd /opt/esg-residuos
-            docker compose pull
-            docker compose up -d
+      name: ${{ matrix.environment }}
+      url: http://${{ matrix.environment == 'staging' && vars.STAGING_HOST || vars.PROD_HOST }}:8080
+steps:
+  - name: 🏁 Log de Deploy
+    run: |
+      echo "Simulando deploy para o ambiente: ${{ matrix.environment }}"
+      echo "IP do Servidor: ${{ matrix.environment == 'staging' && vars.STAGING_HOST || vars.PROD_HOST }}"

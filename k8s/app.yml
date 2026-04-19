@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: esg-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: esg-app }
+  template:
+    metadata:
+      labels: { app: esg-app }
+    spec:
+      containers:
+        - name: esg-app
+          image: ghcr.io/leviberga/esg-residuos:latest
+          ports: [{ containerPort: 8080 }]
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:oracle:thin:@oracle-db:1521/XE"
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom: { secretKeyRef: { name: oracle-secrets, key: APP_USER_PASSWORD } }
+          livenessProbe:
+            httpGet: { path: /actuator/health, port: 8080 }
+            initialDelaySeconds: 60
