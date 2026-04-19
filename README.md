@@ -60,6 +60,9 @@ Executar os testes (unit + integração H2):
 mvn test
 ```
 
+
 Observações / Entrega
 - A solução usa Oracle em produção/dev (configurado via profiles). As migrações Flyway estão em `src/main/resources/db/migration` (V1 cria tabelas e sequências, V2 cria índices, V3 insere dados de exemplo).
 - Se o IntelliJ apresentar erro ao executar pelo Run, use `mvn spring-boot:run` ou ajuste o classpath do módulo no IDE (Lombok deve ser `provided` e plugin Lombok atualizado).
+
+  Teste 2
