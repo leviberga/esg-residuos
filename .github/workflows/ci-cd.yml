@@ -76,8 +76,8 @@ jobs:
     environment:
       name: ${{ matrix.environment }}
       url: http://${{ matrix.environment == 'staging' && vars.STAGING_HOST || vars.PROD_HOST }}:8080
-steps:
-  - name: 🏁 Log de Deploy
-    run: |
-      echo "Simulando deploy para o ambiente: ${{ matrix.environment }}"
-      echo "IP do Servidor: ${{ matrix.environment == 'staging' && vars.STAGING_HOST || vars.PROD_HOST }}"
+    steps:
+      - name: 🏁 Log de Deploy
+        run: |
+          echo "Simulando deploy para o ambiente: ${{ matrix.environment }}"
+          echo "IP do Servidor: ${{ matrix.environment == 'staging' && vars.STAGING_HOST || vars.PROD_HOST }}"
