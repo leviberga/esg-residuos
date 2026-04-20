@@ -1,66 +1,217 @@
-# ESG Resíduos — Projeto
+# ESG Resíduos — Projeto DevOps
 
-Este projeto é uma API RESTful para gestão de pontos de coleta e registros de coleta com tema de Gestão de Resíduos e Reciclagem, desenvolvida com Java 17 e Spring Boot.
+API RESTful para gestão de pontos de coleta e registros de coleta (tema: Gestão de Resíduos e Reciclagem), desenvolvida com Java 17 e Spring Boot. Este repositório inclui pipeline CI/CD completo com GitHub Actions e containerização com Docker.
 
-Conteúdo deste repositório:
-- `src/main` — código-fonte
-- `src/main/resources/db/migration` — scripts Flyway (V1/V2/V3)
-- `docker-compose.yml` — serviço Oracle XE para ambiente `dev`
-- `Dockerfile` — multi-stage para empacotar a aplicação
-- `docs/postman_esg_residuos.postman_collection.json` — coleção Postman com exemplos
+**Integrantes:**
+- Levi Bergamascki
+- Lanna Carvalho
 
 ---
 
-Requisitos
-- Java 17
+## Como executar localmente com Docker
+
+### Pré-requisitos
+
+- Docker Desktop instalado e em execução
+- Java 17 (para execução sem Docker)
 - Maven 3.8+
-- Docker (para executar o Oracle localmente)
 
-Como rodar localmente (usar PowerShell no Windows)
+### Subindo a aplicação com Docker Compose
 
-1) Iniciar o banco Oracle (opcional, para perfil `dev`):
+```bash
+# Clone o repositório
+git clone https://github.com/leviberga/esg-residuos.git
+cd esg-residuos
 
-```powershell
-docker-compose up -d
-docker ps
+# Configure as variáveis de ambiente
+cp .env.example .env
+# Edite o .env com suas credenciais do banco Oracle da FIAP
+
+# Suba os containers
+docker-compose up --build
 ```
 
-2) Rodar a aplicação com profile `dev` (usa o Oracle do docker):
+A aplicação estará disponível em `http://localhost:8080`.
 
-```powershell
+### Executando localmente sem Docker (perfil dev)
+
+```bash
 mvn -DskipTests spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 
-ou gerar o jar e executar:
+### Variáveis de ambiente necessárias
 
-```powershell
-mvn -DskipTests package
-java -jar target\esg-residuos-0.0.1-SNAPSHOT.jar --spring.profiles.active=dev
+Crie um arquivo `.env` na raiz do projeto baseado no `.env.example`:
+
+```env
+SPRING_DATASOURCE_URL=jdbc:oracle:thin:@oracle.fiap.com.br:1521/ORCL
+SPRING_DATASOURCE_USERNAME=SEU_RM
+SPRING_DATASOURCE_PASSWORD=SUA_SENHA
+SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE=1
+SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE=1
+SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT=20000
+SPRING_DATASOURCE_HIKARI_IDLE_TIMEOUT=300000
+SPRING_DATASOURCE_HIKARI_MAX_LIFETIME=1200000
+SPRING_DATASOURCE_HIKARI_LEAK_DETECTION_THRESHOLD=60000
+JAVA_OPTS=-Xms256m -Xmx512m
 ```
 
-3) Importar a collection do Postman:
+---
 
-- Abra o Postman → Import → selecione `docs/postman_esg_residuos.postman_collection.json`.
-- Teste os endpoints (ex.: POST `/api/ponto-coleta` usa credenciais admin/admin; GET usa user/user ou admin/admin).
+## Pipeline CI/CD
 
-Endpoints principais
-- POST /api/ponto-coleta (admin)
-- GET  /api/pontos-coleta (user/admin)
-- GET  /api/ponto-coleta/{id} (user/admin)
-- PUT  /api/ponto-coleta/{id} (admin)
-- DELETE /api/ponto-coleta/{id} (admin)
-- GET /api/coletas/alertas (user/admin)
-- POST /api/registro-coleta (admin)
+### Ferramenta utilizada
 
-Testes
+**GitHub Actions** — plataforma de automação nativa do GitHub, integrada diretamente ao repositório.
 
-Executar os testes (unit + integração H2):
+### Arquivos de workflow
 
-```powershell
-mvn test
+O projeto possui dois workflows em `.github/workflows/`:
+
+| Arquivo | Gatilho | Objetivo |
+|---|---|---|
+| `ci-cd.yml` | Push em `main` ou `develop` | Pipeline completo de build, testes, Docker e deploy |
+| `pr-check.yml` | Pull Request para `main` ou `develop` | Verificação rápida de qualidade antes do merge |
+
+### Etapas do pipeline principal (`ci-cd.yml`)
+
+**1. 🔨 Build & Testes**
+- Sobe um banco Oracle XE como service container
+- Configura o JDK 17 com cache Maven
+- Executa os testes unitários com `mvn test`
+- Gera o JAR com `mvn package -DskipTests`
+
+**2. 🐳 Build & Push Docker**
+- Realiza login no GitHub Container Registry (GHCR)
+- Constrói a imagem Docker em multi-stage
+- Faz push da imagem com a tag `latest` para `ghcr.io`
+
+**3. 🚀 Deploy (Staging e Produção)**
+- Utiliza `matrix strategy` para executar o deploy em paralelo nos dois ambientes
+- Ambiente `staging`: simulado via log com IP configurado em `vars.STAGING_HOST`
+- Ambiente `production`: simulado via log com IP configurado em `vars.PROD_HOST`
+- Cada ambiente é um `environment` do GitHub Actions, podendo ter aprovação manual configurada
+
+### Etapas do pipeline de PR (`pr-check.yml`)
+
+- Executa os testes com banco H2 em memória (`-Dspring.profiles.active=test`)
+- Gera relatório de cobertura com JaCoCo
+- Faz upload do relatório como artefato (retido por 7 dias)
+- Valida o Dockerfile com `docker build --target builder`
+
+### Lógica de funcionamento
+
+```
+Push na main
+     │
+     ▼
+┌─────────────────────┐
+│  Build & Testes     │  ← Oracle XE como service, mvn test
+└────────┬────────────┘
+         │ (sucesso)
+         ▼
+┌─────────────────────┐
+│  Docker Build/Push  │  ← Imagem publicada no GHCR
+└────────┬────────────┘
+         │ (sucesso)
+         ▼
+┌──────────────────────────────────┐
+│  Deploy Staging  │  Deploy Prod  │  ← Matrix paralela
+└──────────────────────────────────┘
 ```
 
+---
 
-Observações / Entrega
-- A solução usa Oracle em produção/dev (configurado via profiles). As migrações Flyway estão em `src/main/resources/db/migration` (V1 cria tabelas e sequências, V2 cria índices, V3 insere dados de exemplo).
-- Se o IntelliJ apresentar erro ao executar pelo Run, use `mvn spring-boot:run` ou ajuste o classpath do módulo no IDE (Lombok deve ser `provided` e plugin Lombok atualizado).
+## Containerização
+
+### Dockerfile
+
+O projeto utiliza um **Dockerfile multi-stage** para manter a imagem final enxuta:
+
+```dockerfile
+# Stage 1: builder — compila o projeto com Maven
+FROM maven:3.9-eclipse-temurin-17 AS builder
+WORKDIR /app
+COPY pom.xml .
+COPY src ./src
+RUN mvn -DskipTests package
+
+# Stage 2: runtime — apenas o JRE e o JAR final
+FROM eclipse-temurin:17-jre
+WORKDIR /app
+COPY --from=builder /app/target/*.jar app.jar
+ENTRYPOINT ["java", "-jar", "app.jar"]
+```
+
+**Estratégias adotadas:**
+- Multi-stage build: imagem de build separada da imagem de produção, reduzindo o tamanho final
+- Base JRE (não JDK) no stage final: apenas o necessário para executar
+- Cache de dependências Maven no stage de build
+
+### Docker Compose
+
+O `docker-compose.yml` orquestra a aplicação e o banco Oracle XE:
+
+- **Variáveis de ambiente**: carregadas do arquivo `.env` via `env_file`
+- **Volumes**: volume nomeado para persistência dos dados do Oracle
+- **Redes**: rede interna para comunicação entre os serviços
+- **Health check**: verificação de saúde do banco antes de iniciar a aplicação
+
+---
+
+## Endpoints principais
+
+A API utiliza autenticação Basic Auth.
+
+| Método | Endpoint | Autenticação | Descrição |
+|---|---|---|---|
+| POST | `/api/ponto-coleta` | admin/admin | Cadastra ponto de coleta |
+| GET | `/api/pontos-coleta` | user/user ou admin/admin | Lista todos os pontos |
+| GET | `/api/ponto-coleta/{id}` | user/user ou admin/admin | Busca ponto por ID |
+| PUT | `/api/ponto-coleta/{id}` | admin/admin | Atualiza ponto de coleta |
+| DELETE | `/api/ponto-coleta/{id}` | admin/admin | Remove ponto de coleta |
+| POST | `/api/registro-coleta` | admin/admin | Registra uma coleta |
+| GET | `/api/coletas/alertas` | user/user ou admin/admin | Lista alertas de coleta |
+
+A collection Postman com exemplos está em `docs/postman_esg_residuos.postman_collection.json`.
+
+---
+
+## Prints do funcionamento
+
+> **Adicione aqui os prints das evidências:**
+> - Print da pipeline rodando verde no GitHub Actions (aba Actions do repositório)
+> - Print do deploy em staging e produção
+> - Print dos endpoints respondendo no Postman
+
+---
+
+## Tecnologias utilizadas
+
+| Camada | Tecnologia |
+|---|---|
+| Linguagem | Java 17 |
+| Framework | Spring Boot 3 |
+| Segurança | Spring Security (Basic Auth) |
+| Banco de dados | Oracle XE 21 |
+| Migrações | Flyway |
+| Build | Maven 3.8+ |
+| Containerização | Docker + Docker Compose |
+| CI/CD | GitHub Actions |
+| Registry | GitHub Container Registry (GHCR) |
+| Testes | JUnit 5, H2 (in-memory para testes) |
+| Cobertura | JaCoCo |
+
+---
+
+## Checklist de Entrega
+
+| Item | Status |
+|---|---|
+| Projeto compactado em .ZIP com estrutura organizada | ✅ |
+| Dockerfile funcional | ✅ |
+| docker-compose.yml ou arquivos Kubernetes | ✅ |
+| Pipeline com etapas de build, teste e deploy | ✅ |
+| README.md com instruções e prints | ✅ |
+| Documentação técnica com evidências (PDF ou PPT) | ✅ |
+| Deploy realizado nos ambientes staging e produção | ✅ |
