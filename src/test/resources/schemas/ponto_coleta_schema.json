@@ -1,0 +1,12 @@
+{
+  "type": "object",
+  "properties": {
+    "id": { "type": "number" },
+    "nome": { "type": "string" },
+    "endereco": { "type": "string" },
+    "cidade": { "type": "string" },
+    "tipo": { "type": "string" },
+    "volumeMaximo": { "type": "number" }
+  },
+  "required": ["id", "nome", "cidade"]
+}

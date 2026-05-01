@@ -1,4 +1,25 @@
 services:
+  oracle-db:
+    image: gvenzl/oracle-xe:21-slim
+    container_name: oracle-db-container
+    ports:
+      - "1521:1521"
+    environment:
+      - ORACLE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
+      - APP_USER=${SPRING_DATASOURCE_USERNAME}
+      - APP_USER_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
+    shm_size: '2gb'
+    deploy:
+      resources:
+        limits:
+          memory: 4gb
+    healthcheck:
+      # Este comando testa se o banco REALMENTE está aceitando conexões
+      test: ["CMD-SHELL", "echo 'exit' | sqlplus -s sys/${SPRING_DATASOURCE_PASSWORD}@localhost:1521/XE as sysdba"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+
   esg-app:
     build: .
     container_name: esg-app-container
@@ -7,3 +28,6 @@ services:
     env_file:
       - .env
     restart: on-failure
+    depends_on:
+      oracle-db:
+        condition: service_healthy # Agora o Java só sobe quando o banco estiver "saudável"

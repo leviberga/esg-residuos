@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "esg_registros_coleta")
+@Table(name = "ESG_REGISTROS_COLETA")
 @Data
 @NoArgsConstructor
 public class RegistroColeta {
@@ -18,7 +18,7 @@ public class RegistroColeta {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ponto_coleta_id", nullable = false)
+    @JoinColumn(name = "PONTO_COLETA_ID", nullable = false)
     private PontoColeta pontoColeta;
 
     @Column(name = "volume_coletado", nullable = false)

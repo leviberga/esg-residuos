@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @Entity
-@Table(name = "esg_pontos_coleta")
+@Table(name = "ESG_PONTOS_COLETA")
 @Data
 @NoArgsConstructor
 public class PontoColeta {

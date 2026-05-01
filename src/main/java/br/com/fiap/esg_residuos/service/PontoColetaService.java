@@ -91,23 +91,24 @@ public class PontoColetaService {
         pontoColetaRepository.deleteById(id);
     }
 
-    // Lógica para GET /coletas/alertas
     @Transactional(readOnly = true)
     public List<PontoColetaExibicaoDTO> listarAlertas() {
-        // Encontra todos os pontos
-        return pontoColetaRepository.findAll().stream()
-                // Filtra a lista na memória
+        return pontoColetaRepository.findAllWithRegistros().stream()
                 .filter(ponto -> {
-                    // Soma o volume de todos os registros daquele ponto
+                    // PROTEÇÃO: Se a lista de registros for nula, tratamos como vazia
+                    if (ponto.getRegistros() == null) {
+                        return false;
+                    }
+
                     BigDecimal volumeAtual = ponto.getRegistros().stream()
-                            .map(registro -> registro.getVolumeColetado())
+                            .map(registro -> registro.getVolumeColetado() != null ?
+                                    registro.getVolumeColetado() : BigDecimal.ZERO)
                             .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-                    // Compara com o volume máximo (se definido)
+                    // PROTEÇÃO: Garante que volumeMaximo não é nulo antes de comparar
                     return ponto.getVolumeMaximo() != null &&
                             volumeAtual.compareTo(ponto.getVolumeMaximo()) >= 0;
                 })
-                // Converte para DTO
                 .map(PontoColetaExibicaoDTO::new)
                 .toList();
     }
