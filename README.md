@@ -177,15 +177,6 @@ A collection Postman com exemplos está em `docs/postman_esg_residuos.postman_co
 
 ---
 
-## Prints do funcionamento
-
-> **Adicione aqui os prints das evidências:**
-> - Print da pipeline rodando verde no GitHub Actions (aba Actions do repositório)
-> - Print do deploy em staging e produção
-> - Print dos endpoints respondendo no Postman
-
----
-
 ## Tecnologias utilizadas
 
 | Camada | Tecnologia |
@@ -204,14 +195,30 @@ A collection Postman com exemplos está em `docs/postman_esg_residuos.postman_co
 
 ---
 
-## Checklist de Entrega
+🧪 Testes de Qualidade e BDD
+O projeto adota a metodologia BDD (Behavior Driven Development) para validar as regras de negócio ESG.  
 
-| Item | Status |
-|---|---|
-| Projeto compactado em .ZIP com estrutura organizada | ✅ |
-| Dockerfile funcional | ✅ |
-| docker-compose.yml ou arquivos Kubernetes | ✅ |
-| Pipeline com etapas de build, teste e deploy | ✅ |
-| README.md com instruções e prints | ✅ |
-| Documentação técnica com evidências (PDF ou PPT) | ✅ |
-| Deploy realizado nos ambientes staging e produção | ✅ |
+Cenários Gherkin Implementados
+Cadastrar ponto de coleta (Governance): Valida o fluxo completo de criação de novos locais de descarte.  
++1
+
+Segurança e Compliance: Garante que tentativas de acesso sem as devidas permissões sejam negadas.  
++1
+
+Alertas de Coleta (Ambiental/Eficiência): Verifica o cálculo de volume acumulado versus volume máximo para gerar alertas de coleta.  
++1
+
+Ferramentas de Teste
+Cucumber: Execução dos cenários Gherkin.  
++1
+
+RestAssured: Validação de API e Contratos JSON.  
++1
+
+JSON Schema Validation: Garante que a resposta da API siga o contrato ponto_coleta_schema.json.  
+
+Executar testes localmente:
+
+Bash
+mvn test -Dtest=RunCucumberTest
+
